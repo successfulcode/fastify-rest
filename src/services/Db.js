@@ -1,36 +1,30 @@
-// import mysql from 'mysql2/promise';
+import 'dotenv/config'
+import Knex from 'knex'
+import knexConfig from '../knexfile.js'
 
-// class Db {
-//   constructor(db) {
-//     console.log('constructor')
-//     this._db = db
-//   }
+const knex = Knex(knexConfig[process.env.NODE_ENV])
 
-//   async createPool(config) {
-//     console.log(`createPool: ${config.user}@${config.host}/${config.database}`)
+class Db {
+  async migrate() {
+    console.log('start: migrate')
 
-//     const pool = await mysql.createPool(config)
+    await knex.migrate.latest()
 
-//     const connection = await pool.getConnection()
-//     connection.release()
+    console.log('end: migrate')
+  }
 
-//     return pool
-//   }
+  initConfig() {
+   return  { 
+      promise: true,
+      connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+    }
+  }
+}
 
-//   async close() {
-//     try {
-//       if (this._db) {
-//         console.log('Db: close no db')
-//       }
+export default Db
 
-//       await this._db.end()
-
-//       console.log('Db: close success')
-//     } catch (err) {
-//       console.error('Db: close error')
-//       console.error(err);
-//     }
-//   }
-// }
-
-// export default Db

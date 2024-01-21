@@ -1,26 +1,36 @@
+
 import 'dotenv/config'
 
 import Fastify from 'fastify'
 import fastifyMySQL from '@fastify/mysql'
+// import knex from 'knex'
+// import knexConfig from './knexfile.js'
+import swagger from '@fastify/swagger'
 
-import productRoutes from './routes/product.route.js'
+import productRoutes from './routes/products.route.js'
+import Db from './services/Db.js'
 
-const mysqlConfig = { 
-  promise: true,
-  connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-}
+const db = new Db()
 
 async function buildServer() {
   const server = Fastify({
     logger: { level: 'info' }
   })
+  
+  server.register(fastifyMySQL, db.initConfig())
 
-  server.register(fastifyMySQL, mysqlConfig)
+  server.addHook('onReady', async () => {
+    await db.migrate()
+  });
+  
+
+  server.register(swagger, {
+    exposeRoute: true,
+    routePrefix: '/docs',
+    swagger: {
+      info: { title: 'fastify-api' }
+    }
+  })
 
   server.register(productRoutes, { prefix: '/api' })
 
